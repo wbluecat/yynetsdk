@@ -3,6 +3,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetCoreDLL", "..\NetCore\Ne
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "YYSocketProxy", "..\YYSocketProxy\YYSocketProxy.vcproj", "{9C3B9DAC-A3C1-4B30-BA97-54DBB0AFC9C2}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetServer", "..\NetServer\NetServer.vcproj", "{1B95856A-0D32-4AD3-A407-F98C12433B08}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetClient", "..\NetClient\NetClient.vcproj", "{7B340FE6-FFF2-4831-B3B1-AABE774046EE}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -13,6 +25,18 @@ Global
 		{4CB0DC85-5C46-412A-A600-82FC08BBE259}.Debug.Build.0 = Debug|Win32
 		{4CB0DC85-5C46-412A-A600-82FC08BBE259}.Release.ActiveCfg = Release|Win32
 		{4CB0DC85-5C46-412A-A600-82FC08BBE259}.Release.Build.0 = Release|Win32
+		{9C3B9DAC-A3C1-4B30-BA97-54DBB0AFC9C2}.Debug.ActiveCfg = Debug|Win32
+		{9C3B9DAC-A3C1-4B30-BA97-54DBB0AFC9C2}.Debug.Build.0 = Debug|Win32
+		{9C3B9DAC-A3C1-4B30-BA97-54DBB0AFC9C2}.Release.ActiveCfg = Release|Win32
+		{9C3B9DAC-A3C1-4B30-BA97-54DBB0AFC9C2}.Release.Build.0 = Release|Win32
+		{1B95856A-0D32-4AD3-A407-F98C12433B08}.Debug.ActiveCfg = Debug|Win32
+		{1B95856A-0D32-4AD3-A407-F98C12433B08}.Debug.Build.0 = Debug|Win32
+		{1B95856A-0D32-4AD3-A407-F98C12433B08}.Release.ActiveCfg = Release|Win32
+		{1B95856A-0D32-4AD3-A407-F98C12433B08}.Release.Build.0 = Release|Win32
+		{7B340FE6-FFF2-4831-B3B1-AABE774046EE}.Debug.ActiveCfg = Debug|Win32
+		{7B340FE6-FFF2-4831-B3B1-AABE774046EE}.Debug.Build.0 = Debug|Win32
+		{7B340FE6-FFF2-4831-B3B1-AABE774046EE}.Release.ActiveCfg = Release|Win32
+		{7B340FE6-FFF2-4831-B3B1-AABE774046EE}.Release.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

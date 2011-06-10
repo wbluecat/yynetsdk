@@ -3,6 +3,7 @@
 
 CIOBuffer::CIOBuffer(void)
 {
+	memset(this,0,sizeof(CIOBuffer));
 }
 
 CIOBuffer::~CIOBuffer(void)
@@ -47,4 +48,25 @@ bool	CIOBuffer::Flush(UINT nLen)
 	memmove(m_data,m_data+nLen,m_nUsed);
 
 	return true;
+}
+
+long	CIOBuffer::GetRef()
+{
+	return m_ref;
+}
+
+void CIOBuffer::AddRef()
+{
+	::InterlockedIncrement(&m_ref);
+}
+
+bool CIOBuffer::ReleaseRef()
+{
+	if (m_ref == 0)
+		return false;
+
+	if (0 == ::InterlockedDecrement(&m_ref))
+		return true;
+
+	return false;
 }
