@@ -2,6 +2,40 @@
 #include ".\iocpsvr.h"
 #include <algorithm>
 
+bool DisableNagle(SOCKET pSock)
+{
+	// 禁用Nagle算法
+	char bNagleValue = 1;
+	if(SOCKET_ERROR == setsockopt(pSock,IPPROTO_TCP,TCP_NODELAY,(char*)&bNagleValue,sizeof(bNagleValue)))
+	{
+		return false;
+	}
+	// 设置缓冲区
+	int nBufferSize = 0;//NET_BUFFER_SIZE;
+	if(SOCKET_ERROR == setsockopt(pSock,SOL_SOCKET,SO_SNDBUF,(char*)&nBufferSize,sizeof(nBufferSize)))
+	{
+		return false;
+	}
+	nBufferSize = 0;//NET_BUFFER_SIZE;
+	if(SOCKET_ERROR == setsockopt(pSock,SOL_SOCKET,SO_RCVBUF,(char*)&nBufferSize,sizeof(nBufferSize)))
+	{
+		return false;
+	}
+
+	nBufferSize = 0;
+	if(SOCKET_ERROR == setsockopt(pSock,SOL_SOCKET,SO_RCVTIMEO,(char*)&nBufferSize,sizeof(nBufferSize)))
+	{
+		return false;
+	}
+
+	if(SOCKET_ERROR == setsockopt(pSock,SOL_SOCKET,SO_SNDTIMEO,(char*)&nBufferSize,sizeof(nBufferSize)))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 namespace YYNetSDK
 {
 	namespace IOCPServer
@@ -17,6 +51,8 @@ namespace YYNetSDK
 		bool CIOCPSvr::Stop()
 		{
 			m_bSvrRunning = false;
+
+			printf("iocpsvr will stop...\n");
 			return true;
 		}
 
@@ -75,7 +111,7 @@ namespace YYNetSDK
 			}
 			sockaddr_in addr;
 			addr.sin_family = AF_INET;
-			addr.sin_port = port;
+			addr.sin_port = htons(port);
 			addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 			if (bind(m_SockListen,(sockaddr*)&addr,sizeof(addr))==SOCKET_ERROR)
@@ -103,6 +139,7 @@ namespace YYNetSDK
 			m_bSendOrder = sendOrder;
 			m_iMaxOLUser = maxOLClient;
 
+			printf("IOCPSvr will running...\n");
 			return true;
 
 		}
@@ -127,11 +164,6 @@ namespace YYNetSDK
 			//out inter
 			OnClientClose(pContext);
 
-			if (pContext->m_sock != INVALID_SOCKET)
-			{
-				closesocketex(pContext->m_sock);
-			}
-
 			if (1)
 			{
 				YYAutoLock _lock(&m_ContextMapLock);
@@ -141,11 +173,24 @@ namespace YYNetSDK
 					m_UsedContextMap.erase(it);
 					m_iNowOLUser--;
 				}
+
+				if (pContext->m_sock != INVALID_SOCKET)
+				{
+					closesocketex(pContext->m_sock);
+				}
 			}
 
 			if (1)
 			{
 				YYAutoLock _lock(&m_ContextLock);
+				pContext->m_sock = INVALID_SOCKET;
+				pContext->m_IOArray.Clear();
+				pContext->m_sendBuf.clear();
+				pContext->m_recvBuf.clear();
+				pContext->m_iSendSequence = 0;
+				pContext->m_iRecvSequence = 0;
+				pContext->m_iRecvSequenceCurrent = 0;
+				pContext->m_iSendSequenceCurrent = 0;
 				m_FreeContextList.push_front(pContext);
 			}
 
@@ -158,10 +203,9 @@ namespace YYNetSDK
 				return;
 			}
 
-			pBuffer->m_ref--;
-
-			if (pBuffer->m_ref > 0)
+			if (!pBuffer->ReleaseRef())
 			{
+				printf("pBuffer reference err =%d\n",pBuffer->GetRef());
 				return;
 			}
 
@@ -183,6 +227,7 @@ namespace YYNetSDK
 				m_FreeIOBuffer.push_front(pBuffer);
 			}
 
+			//printf("pBuffer释放ok\n");
 		}
 
 		CClientContext*	CIOCPSvr::AllocateClient(SOCKET sock)
@@ -257,10 +302,10 @@ namespace YYNetSDK
 
 			if (pBuffer)
 			{
+				memset(pBuffer,0,sizeof(CIOBuffer));
 				pBuffer->m_ioType = type;
-				pBuffer->m_nUsed = 0;
-				pBuffer->m_iSequenceNumber = 0;
-				pBuffer->m_ref = 0;
+
+				pBuffer->AddRef();
 
 				YYAutoLock _lock(&m_UsedIOBufferLock);
 				m_UsedIOBuffer.push_front(pBuffer);
@@ -297,9 +342,10 @@ namespace YYNetSDK
 
 				if (!bRet)
 				{
-					DWORD dwIOError = GetLastError();
+					DWORD dwIOError = WSAGetLastError();
 					if (dwIOError != WAIT_TIMEOUT)
 					{
+						printf("Worker errcode=%d\n",dwIOError);
 						if (pContext)
 						{
 							pThis->ReleaseContext(pContext);
@@ -360,6 +406,8 @@ namespace YYNetSDK
 
 			while (pThis->IsSvrRunning())
 			{
+				//printf("new coming...\n");
+
 				SOCKET sock = WSAAccept(pThis->m_SockListen,NULL,NULL,NULL,0);
 
 				if (sock == INVALID_SOCKET)
@@ -367,6 +415,8 @@ namespace YYNetSDK
 					printf("%d\n",WSAGetLastError());
 					continue;
 				}
+
+				DisableNagle(sock);
 
 				//bind ClientContext
 				CClientContext * pClient = pThis->AllocateClient(sock);
@@ -391,11 +441,11 @@ namespace YYNetSDK
 					continue;
 				}
 
-				pBuffer->m_ref++;
+				//pBuffer->AddRef();
 
 				if (!PostQueuedCompletionStatus(pThis->m_hIOCP,0,(DWORD)pClient,&pBuffer->m_overlapped))
 				{
-					if(GetLastError() != ERROR_IO_PENDING)
+					if(WSAGetLastError() != ERROR_IO_PENDING)
 					{
 						pThis->ReleaseContext(pClient);
 						pThis->ReleaseIOBuffer(pBuffer);
@@ -467,20 +517,21 @@ namespace YYNetSDK
 					ReleaseContext(pContext);
 					return;
 				}
+				//pBuffer->AddRef();
 			}
 
-			pBuffer->m_ref++;
+			pBuffer->m_ioType = itReadZero;
+			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
 
 			if (!PostQueuedCompletionStatus(m_hIOCP,0,(DWORD)pContext,&pBuffer->m_overlapped))
 			{
-				if (GetLastError() != ERROR_IO_PENDING)
+				if (WSAGetLastError() != ERROR_IO_PENDING)
 				{
 					ReleaseIOBuffer(pBuffer);
 					ReleaseContext(pContext);
 					return;
 				}
 			}
-
 		}
 
 		void CIOCPSvr::OnReadZero(CClientContext*pContext,DWORD dwSize,CIOBuffer*pBuffer)
@@ -496,13 +547,22 @@ namespace YYNetSDK
 					ReleaseContext(pContext);
 					return;
 				}
+				//pBuffer->AddRef();
 			}
 
+			pBuffer->m_ioType = itReadZeroComplete;
+			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
 			pBuffer->SetupReadZero();
 
-			if (SOCKET_ERROR == WSARecv(pContext->m_sock,&pBuffer->m_wsaBuf,1,&dwIOSize,
-				&dwFlags,&pBuffer->m_overlapped,NULL))
+			BOOL ret = WSARecv(pContext->m_sock,&pBuffer->m_wsaBuf,1,&dwIOSize,
+				&dwFlags,&pBuffer->m_overlapped,NULL);
+
+			int errCode = WSAGetLastError();
+
+			if (SOCKET_ERROR ==  ret && errCode != WSA_IO_PENDING)
 			{
+				printf("errid=%d\n",errCode);
+
 				ReleaseIOBuffer(pBuffer);
 				ReleaseContext(pContext);
 				return;
@@ -520,15 +580,17 @@ namespace YYNetSDK
 					ReleaseContext(pContext);
 					return;
 				}
+				//pBuffer->AddRef();
 			}
 
-			pBuffer->m_ref++;
+			pBuffer->m_ioType = itRead;
+			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
 
 			pBuffer->SetupRead();
 
 			if (!PostQueuedCompletionStatus(m_hIOCP,0,(DWORD)pContext,&pBuffer->m_overlapped))
 			{
-				if (GetLastError() != ERROR_IO_PENDING)
+				if (WSAGetLastError() != ERROR_IO_PENDING)
 				{
 					ReleaseContext(pContext);
 					ReleaseIOBuffer(pBuffer);
@@ -539,7 +601,6 @@ namespace YYNetSDK
 
 		void CIOCPSvr::OnRead(CClientContext*pContext,DWORD dwSize,CIOBuffer*pBuffer)
 		{
-
 			if (!pBuffer)
 			{
 				pBuffer = AllocateBuffer(itReadComplete);
@@ -549,8 +610,11 @@ namespace YYNetSDK
 					ReleaseContext(pContext);
 					return;
 				}
+				//pBuffer->AddRef();
 			}
 
+			pBuffer->m_ioType = itReadComplete;
+			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
 			pBuffer->SetupRead();
 
 			if (m_bReadOrder)
@@ -605,7 +669,7 @@ namespace YYNetSDK
 						{
 							break;
 						}
-						else if (tMsg->GetMsgHead().len <= 0)
+						else if (tMsg->GetMsgHead().len > MAX_MSG_LEN)
 						{
 							break;
 						}
@@ -626,6 +690,7 @@ namespace YYNetSDK
 
 				pContext->m_iRecvSequenceCurrent = (pContext->m_iRecvSequenceCurrent+1)%5001;
 
+				ReleaseIOBuffer(pBuffer);
 				pBuffer = NULL;
 
 				if (m_bReadOrder)
@@ -645,12 +710,18 @@ namespace YYNetSDK
 					ReleaseIOBuffer(pBuffer);
 					return;
 				}
+				//pBuffer->AddRef();
 			}
 
-			if (!PostQueuedCompletionStatus((HANDLE)pContext->m_sock,0,(DWORD)pContext,&pBuffer->m_overlapped))
+			pBuffer->m_ioType = itReadZero;
+			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
+
+			if (!PostQueuedCompletionStatus(m_hIOCP,0,(DWORD)pContext,&pBuffer->m_overlapped))
 			{
-				if (GetLastError() != ERROR_IO_PENDING)
+				int errCode = WSAGetLastError();
+				if ( errCode!= ERROR_IO_PENDING)
 				{
+					printf("getlasterr code=%d\n",errCode);
 					ReleaseContext(pContext);
 					ReleaseIOBuffer(pBuffer);
 					return;
@@ -670,7 +741,9 @@ namespace YYNetSDK
 			while (pBuffer)
 			{
 				pBuffer->m_ioType = itWriteComplete;
+				memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
 				pBuffer->SetupWrite();
+
 				DWORD dwFlags = 0;
 				DWORD dwIOSize = 0;
 				if (SOCKET_ERROR == WSASend(pContext->m_sock,&pBuffer->m_wsaBuf,1,&dwIOSize,dwFlags,
@@ -695,15 +768,16 @@ namespace YYNetSDK
 				else
 				{
 					pContext->m_iSendSequenceCurrent = (pContext->m_iSendSequenceCurrent+1)%5001;
+					ReleaseIOBuffer(pBuffer);
 					pBuffer = NULL;
 					if (m_bSendOrder && IsSvrRunning())
 					{
 						//...
 					}
 				}
+
 			}
-
-
+			//ReleaseIOBuffer(pBuffer);
 		}
 
 		void CIOCPSvr::OnWriteComplete(CClientContext*pContext,DWORD dwSize,CIOBuffer*pBuffer)
@@ -722,15 +796,55 @@ namespace YYNetSDK
 					if (pBuffer->Flush(dwSize))
 					{
 						pBuffer->m_ioType = itWrite;
-						PostSend(pContext,pBuffer);
+						memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
+						
+						//PostSend(pContext,pBuffer);
+						if (!PostQueuedCompletionStatus(m_hIOCP,pBuffer->m_nUsed,(DWORD)pContext,&pBuffer->m_overlapped))
+						{
+							if (WSAGetLastError() != WSA_IO_PENDING)
+							{
+								ReleaseContext(pContext);
+								ReleaseIOBuffer(pBuffer);
+								return;
+							}
+						}
 					}
 				}
 			}
-			else
+
+			//send finish
+			ReleaseIOBuffer(pBuffer);
+		}
+
+		void CIOCPSvr::PostRead(CClientContext*pClient,CIOBuffer*pBuffer)
+		{
+			if (!pClient || pClient->m_sock == INVALID_SOCKET)
 			{
-				ReleaseIOBuffer(pBuffer);
+				return;
 			}
 
+			if (!pBuffer)
+			{
+				pBuffer = AllocateBuffer(itRead);
+				if (!pBuffer)
+				{
+					ReleaseContext(pClient);
+					return;
+				}
+			}
+
+			pBuffer->m_ioType = itRead;
+			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
+
+			if (!PostQueuedCompletionStatus(m_hIOCP,0,(DWORD)pClient,&pBuffer->m_overlapped))
+			{
+				if (WSAGetLastError() != WSA_IO_PENDING)
+				{
+					ReleaseContext(pClient);
+					ReleaseIOBuffer(pBuffer);
+					return;
+				}
+			}
 		}
 
 		void CIOCPSvr::PostSend(CClientContext*pClient,CIOBuffer*pBuffer)
@@ -747,8 +861,6 @@ namespace YYNetSDK
 				//...
 			}
 
-			pBuffer->m_ref++;
-
 			if (!PostQueuedCompletionStatus(m_hIOCP,pBuffer->m_nUsed,(DWORD)pClient,&pBuffer->m_overlapped))
 			{
 				if (WSAGetLastError() != WSA_IO_PENDING)
@@ -758,6 +870,7 @@ namespace YYNetSDK
 					return;
 				}
 			}
+
 		}
 
 		//////////////////////////////////////////////////////////////////////////

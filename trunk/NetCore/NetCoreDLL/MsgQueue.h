@@ -49,8 +49,8 @@ namespace YYNetSDK
 		CMsg GetMsg()
 		{
 			CMsg tmp;
-			memcpy(&tmp,&head,sizeof(CMsgHead));
-			memcpy(&tmp+sizeof(CMsgHead),&msg,sizeof(T));
+			memcpy(tmp.data,&head,sizeof(CMsgHead));
+			memcpy(tmp.data+sizeof(CMsgHead),&msg,sizeof(T));
 			return tmp;
 		}
 	protected:
@@ -78,11 +78,11 @@ namespace YYNetSDK
 
 	typedef list<CMsg> MsgList;
 
-	class CMsgQueue
+	class _DLL CMsgQueue
 	{
 	public:
 		CMsgQueue(void);
-		~CMsgQueue(void);
+		virtual~CMsgQueue(void);
 	public:
 		CMsg PopMsg();
 		void PushMsg(CMsg msg);
