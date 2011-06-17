@@ -37,6 +37,11 @@ namespace YYNetSDK
 				return false;
 			}
 
+			if (listen(m_sockSvr,5) == SOCKET_ERROR)
+			{
+				return false;
+			}
+
 			m_running = true;
 
 			DWORD dwThreadID;

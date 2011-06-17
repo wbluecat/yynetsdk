@@ -55,8 +55,8 @@ namespace YYNetSDK
 			virtual void OnClientClose(LPVOID pAddr);
 			virtual void OnClientConnect(LPVOID pAddr);
 		public:
-			void	PostSend(CClientContext*pClient,CIOBuffer*pBuffer);
-			void	PostRead(CClientContext*pClient,CIOBuffer*pBuffer);
+			//void	PostSend(CClientContext*pClient,CIOBuffer*pBuffer);
+			//void	PostRead(CClientContext*pClient,CIOBuffer*pBuffer);
 
 			bool	SendMsg(LPVOID pAddr,BYTE *data,int dataLen);
 			bool	BroadCastMsg(LPVOID pAddr,BYTE *data,int dataLen);

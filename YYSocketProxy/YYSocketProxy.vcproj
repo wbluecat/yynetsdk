@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="NetClient"
-	ProjectGUID="{7B340FE6-FFF2-4831-B3B1-AABE774046EE}"
+	Name="YYSocketProxy"
+	ProjectGUID="{9C3B9DAC-A3C1-4B30-BA97-54DBB0AFC9C2}"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -19,7 +19,7 @@
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
 			IntermediateDirectory="Debug"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
 			>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;YYSOCKETPROXY_EXPORTS;_DLL_EXPORT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -61,13 +61,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="../bin/debug/NetClient.exe"
+				AdditionalDependencies="ws2_32.lib"
+				OutputFile="../bin/debug/YYSocketProxy.dll"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/NetClient.pdb"
-				SubSystem="1"
+				ProgramDatabaseFile="$(OutDir)/YYSocketProxy.pdb"
+				SubSystem="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
+				ImportLibrary="../bin/debug/YYSocketProxy.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -96,7 +98,7 @@
 			Name="Release|Win32"
 			OutputDirectory="Release"
 			IntermediateDirectory="Release"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			CharacterSet="2"
 			>
@@ -117,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;YYSOCKETPROXY_EXPORTS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -135,14 +137,15 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/NetClient.exe"
+				OutputFile="$(OutDir)/YYSocketProxy.dll"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
+				ImportLibrary="$(OutDir)/YYSocketProxy.lib"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -177,10 +180,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\NetClient.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -200,6 +199,50 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\YYSocketProxy.cpp"
+				>
+			</File>
+			<Filter
+				Name="netcore"
+				>
+				<File
+					RelativePath=".\CClientContext.h"
+					>
+				</File>
+				<File
+					RelativePath=".\CIOBuffer.h"
+					>
+				</File>
+				<File
+					RelativePath=".\export.h"
+					>
+				</File>
+				<File
+					RelativePath=".\IOArray.h"
+					>
+				</File>
+				<File
+					RelativePath=".\lock.h"
+					>
+				</File>
+				<File
+					RelativePath=".\msg.h"
+					>
+				</File>
+				<File
+					RelativePath=".\myMsg.h"
+					>
+				</File>
+				<File
+					RelativePath=".\ProxyCore.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\ProxyCore.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Í·ÎÄ¼þ"

@@ -2,8 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="NetClient"
-	ProjectGUID="{7B340FE6-FFF2-4831-B3B1-AABE774046EE}"
+	Name="ProxyClient"
+	ProjectGUID="{877812FD-5C5C-4644-B130-16D9A0E93C51}"
+	RootNamespace="ProxyClient"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="131072"
 	>
@@ -61,10 +62,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="../bin/debug/NetClient.exe"
+				OutputFile="../bin/debug/ProxyClient.exe"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="$(OutDir)/NetClient.pdb"
+				ProgramDatabaseFile="$(OutDir)/ProxyClient.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -135,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)/NetClient.exe"
+				OutputFile="$(OutDir)/ProxyClient.exe"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -177,7 +178,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\NetClient.cpp"
+				RelativePath=".\mySocket.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ProxyClient.cpp"
 				>
 			</File>
 			<File

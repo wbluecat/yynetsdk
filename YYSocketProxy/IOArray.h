@@ -1,7 +1,6 @@
 #pragma once
 #include <vector>
 using namespace std;
-#include "msgqueue.h"
 
 template<typename T>
 class CIOArray
@@ -21,7 +20,7 @@ public:
 
 	T*		GetFirst()
 	{
-		if (m_ioArray.empty() || m_ioArray.size() < sizeof(YYNetSDK::CMsgHead))
+		if (m_ioArray.empty() || m_ioArray.size() < sizeof(CMsgHead))
 		{
 			return NULL;
 		}
@@ -40,8 +39,9 @@ public:
 
 	void	PopFront(T*data,int dataLen)
 	{
-		if (dataLen > m_ioArray.size())
+		if (dataLen > m_ioArray.size() || m_ioArray.empty())
 		{
+			printf("ioarray popFront err\n");
 			return;
 		}
 
