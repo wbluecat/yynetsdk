@@ -7,13 +7,16 @@ using namespace std;
 
 #define MAX_MSG_LEN	1024
 
+#pragma pack(1)
+
 namespace YYNetSDK
 {
 	class CMsgHead
 	{
 	public:
 		int id;
-		int len;	//only body len
+		int len;		//only body len
+		BYTE channel;	//connect channel
 		int	extra;
 	protected:
 	private:
@@ -93,3 +96,5 @@ namespace YYNetSDK
 	};
 
 }
+
+#pragma pack()

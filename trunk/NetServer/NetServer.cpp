@@ -19,23 +19,23 @@ typedef YYNetSDK::CMsgT<tagMyMsg> MyMsg;
 class CServer : public CIOCPSvr
 {
 public:
-	virtual void OnHandleMsg(LPVOID pAddr,BYTE *data,int dataLen)
-	{
+	//virtual void OnHandleMsg(LPVOID pAddr,BYTE *data,int dataLen)
+	//{
 
-		MyMsg *msg = (MyMsg*)data;
+	//	MyMsg *msg = (MyMsg*)data;
 
-		printf("handle msg len=%d,msg=%s,count=%d\n",dataLen,msg->msg.msg,count);
+	//	printf("handle msg len=%d,msg=%s,count=%d\n",dataLen,msg->msg.msg,count);
 
-		count++;
-	}
-	virtual void OnClientClose(LPVOID pAddr)
-	{
-		printf("OnClientClose\n");
-	}
-	virtual void OnClientConnect(LPVOID pAddr)
-	{
-		printf("OnClientConnect\n");
-	}
+	//	count++;
+	//}
+	//virtual void OnClientClose(LPVOID pAddr)
+	//{
+	//	printf("OnClientClose\n");
+	//}
+	//virtual void OnClientConnect(LPVOID pAddr)
+	//{
+	//	printf("OnClientConnect\n");
+	//}
 protected:
 private:
 };

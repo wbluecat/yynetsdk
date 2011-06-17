@@ -385,7 +385,7 @@ namespace YYNetSDK
 					}
 				}
 
-				if (!pContext && !pBuffer && !pThis->IsSvrRunning())
+				if (!pContext && !lpOverlapped && !pThis->IsSvrRunning())
 				{
 					bError = true;
 					break;
@@ -663,28 +663,32 @@ namespace YYNetSDK
 
 					CMsg *tMsg = (CMsg*)pContext->m_IOArray.GetFirst();
 
-					while (1)
+					while (tMsg)
 					{
-						if (pContext->m_IOArray.Size() < sizeof(CMsgHead))
-						{
-							break;
-						}
-						else if (tMsg->GetMsgHead().len > MAX_MSG_LEN)
-						{
-							break;
-						}
-						else if (tMsg->GetMsgHead().len + sizeof(CMsgHead) > pContext->m_IOArray.Size())
-						{
-							msgErr = true;
-							break;
-						}
+						//if (pContext->m_IOArray.Size() < sizeof(CMsgHead))
+						//{
+						//	break;
+						//}
+						//else if (tMsg->GetMsgHead().len > MAX_MSG_LEN)
+						//{
+						//	break;
+						//}
+						//else if (tMsg->GetMsgHead().len + sizeof(CMsgHead) > pContext->m_IOArray.Size())
+						//{
+						//	msgErr = true;
+						//	break;
+						//}
 						//post msg
 						OnHandleMsg(pContext,(BYTE*)tMsg,tMsg->GetMsgHead().len + sizeof(CMsgHead));
 						//erase
 						pContext->m_IOArray.PopFront((BYTE*)tMsg,tMsg->GetMsgHead().len + sizeof(CMsgHead));
 						//next msg
 						tMsg = (CMsg*)pContext->m_IOArray.GetFirst();
-
+						if (!tMsg)
+						{
+							msgErr = true;
+							break;
+						}
 					}
 				}
 
@@ -816,79 +820,79 @@ namespace YYNetSDK
 			ReleaseIOBuffer(pBuffer);
 		}
 
-		void CIOCPSvr::PostRead(CClientContext*pClient,CIOBuffer*pBuffer)
-		{
-			if (!pClient || pClient->m_sock == INVALID_SOCKET)
-			{
-				return;
-			}
+		//void CIOCPSvr::PostRead(CClientContext*pClient,CIOBuffer*pBuffer)
+		//{
+		//	if (!pClient || pClient->m_sock == INVALID_SOCKET)
+		//	{
+		//		return;
+		//	}
 
-			if (!pBuffer)
-			{
-				pBuffer = AllocateBuffer(itRead);
-				if (!pBuffer)
-				{
-					ReleaseContext(pClient);
-					return;
-				}
-			}
+		//	if (!pBuffer)
+		//	{
+		//		pBuffer = AllocateBuffer(itRead);
+		//		if (!pBuffer)
+		//		{
+		//			ReleaseContext(pClient);
+		//			return;
+		//		}
+		//	}
 
-			pBuffer->m_ioType = itRead;
-			memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
+		//	pBuffer->m_ioType = itRead;
+		//	memset(&pBuffer->m_overlapped,0,sizeof(OVERLAPPED));
 
-			if (!PostQueuedCompletionStatus(m_hIOCP,0,(DWORD)pClient,&pBuffer->m_overlapped))
-			{
-				if (WSAGetLastError() != WSA_IO_PENDING)
-				{
-					ReleaseContext(pClient);
-					ReleaseIOBuffer(pBuffer);
-					return;
-				}
-			}
-		}
+		//	if (!PostQueuedCompletionStatus(m_hIOCP,0,(DWORD)pClient,&pBuffer->m_overlapped))
+		//	{
+		//		if (WSAGetLastError() != WSA_IO_PENDING)
+		//		{
+		//			ReleaseContext(pClient);
+		//			ReleaseIOBuffer(pBuffer);
+		//			return;
+		//		}
+		//	}
+		//}
 
-		void CIOCPSvr::PostSend(CClientContext*pClient,CIOBuffer*pBuffer)
-		{
-			if (!pClient || !pBuffer || !IsSvrRunning() || pClient->m_sock == INVALID_SOCKET)
-			{
-				ReleaseIOBuffer(pBuffer);
-				ReleaseContext(pClient);
-				return;
-			}
+		//void CIOCPSvr::PostSend(CClientContext*pClient,CIOBuffer*pBuffer)
+		//{
+		//	if (!pClient || !pBuffer || !IsSvrRunning() || pClient->m_sock == INVALID_SOCKET)
+		//	{
+		//		ReleaseIOBuffer(pBuffer);
+		//		ReleaseContext(pClient);
+		//		return;
+		//	}
 
-			if (m_bSendOrder)
-			{
-				//...
-			}
+		//	if (m_bSendOrder)
+		//	{
+		//		//...
+		//	}
 
-			if (!PostQueuedCompletionStatus(m_hIOCP,pBuffer->m_nUsed,(DWORD)pClient,&pBuffer->m_overlapped))
-			{
-				if (WSAGetLastError() != WSA_IO_PENDING)
-				{
-					ReleaseIOBuffer(pBuffer);
-					ReleaseContext(pClient);
-					return;
-				}
-			}
+		//	if (!PostQueuedCompletionStatus(m_hIOCP,pBuffer->m_nUsed,(DWORD)pClient,&pBuffer->m_overlapped))
+		//	{
+		//		if (WSAGetLastError() != WSA_IO_PENDING)
+		//		{
+		//			ReleaseIOBuffer(pBuffer);
+		//			ReleaseContext(pClient);
+		//			return;
+		//		}
+		//	}
 
-		}
+		//}
 
 		//////////////////////////////////////////////////////////////////////////
 		//virtual Function
 
 		void CIOCPSvr::OnClientClose(LPVOID pAddr)
 		{
-
+			printf("virtual OnClientClose\n");
 		}
 
 		void CIOCPSvr::OnClientConnect(LPVOID pAddr)
 		{
-
+			printf("virtual OnClientConnect\n");
 		}
 
 		void CIOCPSvr::OnHandleMsg(LPVOID pAddr,BYTE *data,int dataLen)
 		{
-
+			printf("virtual recv msg %d\n",dataLen);
 		}
 	}
 }
